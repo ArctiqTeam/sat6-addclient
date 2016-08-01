@@ -1,0 +1,45 @@
+---
+# Add an existing client system to Satellite 6.1 and later
+- name: Perform client-side work
+  hosts: client
+  vars_files:
+    - variables.yml
+  remote_user: root
+  tasks:
+    - name: Subscription Manager clean
+      command: /usr/bin/subscription-manager clean
+      ignore_errors: yes
+    - name: Subscription Manager register
+    - name: Install the new Katello CA
+      yum: name=http://{{ capsule_server }}/pub/katello-ca-consumer-latest.noarch.rpm state=latest
+    - name: Register the system again with Satellite with the NEW activation key
+      command: /usr/bin/subscription-manager register --org="{{ satellite_org }}" --activationkey={{ activation_key }}
+      ignore_errors: yes
+    - name: Install Katello agent
+      yum: name=katello-agent state=latest
+    - name: Install Puppet agent
+      yum: name=puppet state=latest
+    - name: Replace Puppet Config file with new one
+      template: src=templates/puppet.conf.j2 dest=/etc/puppet/puppet.conf
+
+- name: Add the new host to the autosign configuration
+  hosts: capsule
+  vars_files:
+    - variables.yml
+  remote_user: root
+  tasks:
+    - name: Add the host to autosign.conf
+      lineinfile: dest=/etc/puppet/autosign.conf line="{{ client_system }}"
+
+- name: Perform client-side work
+  hosts: client
+  vars_files:
+    - variables.yml
+  remote_user: root
+  tasks:
+    - name: test run of Puppet
+      become: yes
+      shell: puppet agent -t
+      ignore_errors: yes
+    - name: Enable Puppet
+      service: name=puppet state=started
