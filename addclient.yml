@@ -47,4 +47,4 @@
       shell: puppet agent -t
       ignore_errors: yes
     - name: Enable Puppet
-      service: name=puppet state=started
+      service: name=puppet enabled=yes state=started
