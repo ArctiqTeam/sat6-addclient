@@ -9,16 +9,21 @@
     - name: Subscription Manager clean
       command: /usr/bin/subscription-manager clean
       ignore_errors: yes
-    - name: Subscription Manager register
     - name: Install the new Katello CA
-      yum: name=http://{{ capsule_server }}/pub/katello-ca-consumer-latest.noarch.rpm state=latest
-    - name: Register the system again with Satellite with the NEW activation key
-      command: /usr/bin/subscription-manager register --org="{{ satellite_org }}" --activationkey={{ activation_key }}
+      yum: name=http://{{ capsule_server }}/pub/katello-ca-consumer-latest.noarch.rpm state=present
+    - name: Register the system again with Satellite with the activation key
+      command: /usr/bin/subscription-manager register --org="{{ satellite_org }}" --activationkey="{{ activation_key }}"
       ignore_errors: yes
+    - name: Disable all repos
+      command: /usr/bin/subscription-manager repos --disable "*"
+    - name: Remove local repos
+      file: path=/etc/yum.repos.d/media.repo state=absent
+    - name: Enable all repos
+      command: /usr/bin/subscription-manager repos --enable rhel-7-server-rpms --enable rhel-7-server-satellite-tools-6-beta-rpms
     - name: Install Katello agent
-      yum: name=katello-agent state=latest
+      yum: name=katello-agent state=present
     - name: Install Puppet agent
-      yum: name=puppet state=latest
+      yum: name=puppet state=present
     - name: Replace Puppet Config file with new one
       template: src=templates/puppet.conf.j2 dest=/etc/puppet/puppet.conf
 
