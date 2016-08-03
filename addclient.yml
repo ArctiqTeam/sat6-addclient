@@ -6,6 +6,12 @@
     - variables.yml
   remote_user: root
   tasks:
+    - name: Subscription Manager remove
+      command: /usr/bin/subscription-manager remove --all
+      ignore_errors: yes
+    - name: Subscription Manager unregister
+      command: /usr/bin/subscription-manager unregister
+      ignore_errors: yes
     - name: Subscription Manager clean
       command: /usr/bin/subscription-manager clean
       ignore_errors: yes
@@ -13,7 +19,6 @@
       yum: name=http://{{ capsule_server }}/pub/katello-ca-consumer-latest.noarch.rpm state=present
     - name: Register the system again with Satellite with the activation key
       command: /usr/bin/subscription-manager register --org="{{ satellite_org }}" --activationkey="{{ activation_key }}"
-      ignore_errors: yes
     - name: Disable all repos
       command: /usr/bin/subscription-manager repos --disable "*"
     - name: Remove local repos
