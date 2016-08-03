@@ -52,3 +52,12 @@
       ignore_errors: yes
     - name: Enable Puppet
       service: name=puppet enabled=yes state=started
+
+- name: Remove the new host to the autosign configuration
+  hosts: capsule
+  vars_files:
+    - variables.yml
+  remote_user: root
+  tasks:
+    - name: Remove the host from autosign.conf
+      lineinfile: dest=/etc/puppet/autosign.conf state=absent line="{{ client_system }}"
